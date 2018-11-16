@@ -9,5 +9,9 @@
 </template>
 
 <style>
-
+    body {
+        font-family: Arial, Helvetica, sans-serif;
+        font-weight: normal;
+        font-size: 16px;
+    }
 </style>
