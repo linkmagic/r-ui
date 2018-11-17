@@ -2,7 +2,7 @@
     <div class="Training__Memory__Topological">
         <div class="Topological__Sidebar">
 
-            <div class="Training__ControllerType">
+            <div class="Training__IndicatorLamps">
                 <div class="cont_lamps">
                     <div id="idLampError" class="lamp_error"></div>
                     <div id="idLampOk" class="lamp_ok"></div>
@@ -10,17 +10,19 @@
             </div>
 
             <div class="Training__ActionResult">
-                {{ timeDiff }}
+                <div class="Training__ActionResult__Value">
+                    {{ timeDiff }}
+                </div>
+
             </div>
 
             <div class="Training__ActionTask">
-                <div class="Training__ActionTask__Value">
-                    <span v-if="showLetterTask">{{letterTask}}</span>
+                <div v-if="showLetterTask" class="Training__ActionTask__Value">
+                    {{ letterTask }}
                 </div>
             </div>
 
             <div class="Training__Details">
-
                 <table>
                     <tr>
                         <td>Уровень</td>
@@ -33,19 +35,17 @@
                         <td><input type="number" min=1 max=5 class="Training__Details__TrainingsCountInput" v-model="errorsMax"/></td>
                     </tr>
                     <tr>
-                        <td>Время запоминания (сек)</td>
+                        <td>Время (сек)</td>
                         <td><input type="number" min=1 max=60 class="Training__Details__TrainingsCountInput" v-model="timeMemorize"/></td>
                     </tr>
                 </table>
-
-                <button class="Training__Details__StartBtn" v-on:click="startBtnOnClick">
-                    С Т А Р Т
-                </button>
-                <button class="Training__Details__StopBtn" v-on:click="resetBtnOnClick">
-                    С Т О П
-                </button>
-
             </div>
+
+            <div class="Training__Details">
+                <a class="ctrlButton ctrlBtn_start" v-on:click="startBtnOnClick"></a>
+                <a class="ctrlButton ctrlBtn_stop" v-on:click="resetBtnOnClick"></a>
+            </div>
+
         </div>
 
         <div class="Topological__WorkingPlace">
@@ -208,7 +208,7 @@ export default class TopologicalMemory extends Vue {
                 if (okLampElem) {
                     okLampElem.style.opacity = '1.0';
                     this.timerPtrLampOk = setTimeout(() => {
-                        okLampElem.style.opacity = '0.4';
+                        okLampElem.style.opacity = '0.2';
                         clearTimeout(this.timerPtrLampOk);
                     }, 1000);
                 }
@@ -224,7 +224,7 @@ export default class TopologicalMemory extends Vue {
                 if (errorLampElem) {
                     errorLampElem.style.opacity = '1.0';
                     this.timerPtrLampError = setTimeout(() => {
-                        errorLampElem.style.opacity = '0.4';
+                        errorLampElem.style.opacity = '0.2';
                         clearTimeout(this.timerPtrLampError);
                     }, 1000);
                 }
@@ -250,8 +250,8 @@ export default class TopologicalMemory extends Vue {
     display: block;
     position: absolute;
     top: 0;
-    width: 200px;
-    padding: 45px 0 0 0;
+    width: 250px;
+    padding: 45px 22px 0 16px;
     height: calc(100% - 50px);
     background-color: #F9F1E4;
     z-index: -1;
@@ -261,9 +261,9 @@ export default class TopologicalMemory extends Vue {
     display: block;
     position: absolute;
     top: 0;
-    width: calc(100% - 225px);
+    width: calc(100% - 340px);
     height: calc(100% - 75px);
-    margin: 0 0 0 200px;
+    margin: 0 0 0 300px;
     padding: 75px 0 0 25px;
     background-color: #F9F1E4;
     z-index: -1;
@@ -287,21 +287,28 @@ export default class TopologicalMemory extends Vue {
     transform: rotateY(180deg);
 }
 
-.Training__ControllerType,
+.Training__IndicatorLamps,
 .Training__ActionResult,
 .Training__ActionTask,
-.Training__Details{
+.Training__Details {
     display: block;
     text-align: center;
     width: 100%;
     height: 100px;
-    border-bottom: 4px solid #F9F1E4;
-    background-color: #f7f7f7;
+    margin: 0 0 8px 0;
+    background-color: #f9f1e4;
+    border: 2px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    box-shadow: 0px 0px 16px rgba(0,0,0,0.25);
+}
+
+.Training__ActionResult__Value {
+    padding: 12% 0 0 0;
 }
 
 .Training__ActionTask,
 .Training__Details {
-    height: 150px;
+    padding: 18px 0;
 }
 
 .Training__Details > button {
@@ -314,6 +321,7 @@ export default class TopologicalMemory extends Vue {
 table td {
     font-size: 16px;
     text-align: right;
+    padding: 0 0 0 16px;
 }
 table {
     margin: 0 0 8px 0;
@@ -327,7 +335,7 @@ table input {
 
 .Training__ActionTask__Value {
     text-align: center;
-    padding: 25% 0;
+    padding: 10% 0;
     font-size: 52px;
     font-weight: bold;
     font-family: sans-serif, Helvetica, Arial;
@@ -358,7 +366,7 @@ table input {
     background: radial-gradient(ellipse at center, #ff5542 0%,#cf0404 100%);
     box-shadow: 0 0 16px #ff0000;
     margin: 16px 16px 0 0;
-    opacity: 0.4;
+    opacity: 0.2;
     transition: opacity 0.2s;
 }
 
@@ -366,10 +374,9 @@ table input {
     background: radial-gradient(ellipse at center, #1ae45d 0%,#149b41 100%);
     box-shadow: 0 0 16px #118337;
     margin: 16px 0 0 16px;
-    opacity: 0.4;
+    opacity: 0.2;
     transition: opacity 0.2s;
 }
-
 
 /* Flipped training card */
 
@@ -429,6 +436,63 @@ table input {
     font-weight: bold;
     color: rgb(64, 48, 32);
     box-shadow: 0 0 16px rgba(0, 0, 0, 0.75);
+}
+
+/* Process control Button */
+
+.Cont_CtrlButtons {
+    display: block;
+    text-align: center;
+    background-color: #f9f1e4;
+    border: 2px solid rgba(0,0,0,0.15);
+    border-radius: 16px;
+    box-shadow: inset 0px 0px 16px rgba(0,0,0,0.25);
+}
+
+.ctrlButton {
+    display: inline-block;
+    height: 64px;
+    width: 64px;
+    margin: 16px 20px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    background-image: linear-gradient(to top, #f4f1ee, #fff);
+    border-radius: 50%;
+    border: none;
+    box-shadow: 0px 8px 10px 0px rgba(0, 0, 0, .3), inset 0px 4px 1px 1px white, inset 0px -3px 1px 1px rgba(204,198,197,.5);
+}
+
+.ctrlButton:focus {
+    outline: none;
+}
+
+.ctrlButton:hover {
+    background-image: linear-gradient(to top, #fff, #f4f1ee);
+    color:#0088cc;
+}
+
+.ctrlButton:active {
+    background-image: linear-gradient(to top, #efedec, #f7f4f4);
+    box-shadow: 0 3px 5px 0 rgba(0,0,0,.4), inset 0px -3px 1px 1px rgba(204,198,197,.5);
+}
+
+.ctrlBtn_start:after {
+    content: '▶';
+    display: block;
+    position: absolute;
+    font-size: 32px;
+    color: #45a752;
+    margin: 15px 0 0 21px;
+}
+
+.ctrlBtn_stop:after {
+    content: '◼';
+    display: block;
+    position: absolute;
+    font-size: 32px;
+    color: #c26028;
+    margin: 15px 0 0 19px;
 }
 
 </style>
