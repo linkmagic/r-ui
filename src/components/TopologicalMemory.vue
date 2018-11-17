@@ -1,12 +1,18 @@
 <template>
     <div class="Training__Memory__Topological">
         <div class="Topological__Sidebar">
+
             <div class="Training__ControllerType">
-                <!-- Controller type -->
+                <div class="cont_lamps">
+                    <div id="idLampError" class="lamp_error"></div>
+                    <div id="idLampOk" class="lamp_ok"></div>
+                </div>
             </div>
+
             <div class="Training__ActionResult">
-                <!-- Action result -->
+                {{ timeDiff }}
             </div>
+
             <div class="Training__ActionTask">
                 <div class="Training__ActionTask__Value">
                     <span v-if="showLetterTask">{{letterTask}}</span>
@@ -26,23 +32,22 @@
                         <td>Макс. ошибок</td>
                         <td><input type="number" min=1 max=5 class="Training__Details__TrainingsCountInput" v-model="errorsMax"/></td>
                     </tr>
+                    <tr>
+                        <td>Время запоминания (сек)</td>
+                        <td><input type="number" min=1 max=60 class="Training__Details__TrainingsCountInput" v-model="timeMemorize"/></td>
+                    </tr>
                 </table>
 
                 <button class="Training__Details__StartBtn" v-on:click="startBtnOnClick">
                     С Т А Р Т
                 </button>
-                
-                <button class="Training__Details__StopBtn" v-on:click="turnBackCards">
-                    Поворот (ТЕСТ)
+                <button class="Training__Details__StopBtn" v-on:click="resetBtnOnClick">
+                    С Т О П
                 </button>
-
-                <!-- <button class="Training__Details__StopBtn">
-                    Trainings loop
-                </button> -->
 
             </div>
         </div>
-        
+
         <div class="Topological__WorkingPlace">
 
             <div v-for="letter in lettersTrainingArray" v-bind:key="letter.name"
@@ -62,7 +67,7 @@
             </div>
 
         </div>
-        
+
     </div>
 </template>
 
@@ -92,29 +97,41 @@ export default class TopologicalMemory extends Vue {
 
     @Prop() public someProp!: string;
 
-    public trainingLevel: number = 1;
-    public lettersTrainingArray: ILetterTraining[] = [];
-    public lettersTrainingCount: number = 0;
-    public letterTask: string = '';
-    public showLetterTask: boolean = false;
-    public errorsMax: number = 1;
-    public errorsCount: number = 0;
-    public trainigIsEndByError: boolean = false;
-    public trainigIsEndBySuccess: boolean = false;
-    public timeStart: number = 0;
-    public timeEnd: number = 0;
+    private trainingLevel: number = 1;
+    private lettersTrainingArray: ILetterTraining[] = [];
+    private lettersTrainingCount: number = 0;
+    private letterTask: string = '';
+    private showLetterTask: boolean = false;
+    private timeMemorize: number = 2;
+    private errorsMax: number = 2;
+    private errorsCount: number = 0;
+    private timeStart: number = 0;
+    private timeEnd: number = 0;
+    private timeDiff: string = '';
+    private isTrainingFinished: boolean = true;
+    private timerPtrMemorize: any = null;
+    private timerPtrLampOk: any = null;
+    private timerPtrLampError: any = null;
 
-    public initTrainingSequence() {
-        // this.trainingLevel = 3;  // set this value from UI
+    // constructor() {
+    //     super();
+    //     this.someProp = '';
+    // }
+
+    private resetParams() {
         this.lettersTrainingArray = [];
-        this.lettersTrainingCount = Math.trunc(((letters.length / 100) * this.trainingLevel) * 10);
         this.letterTask = '';
-        // this.errorsMax = 3;  // set this value from UI
+        this.showLetterTask = false;
         this.errorsCount = 0;
-        this.trainigIsEndByError = false;
-        this.trainigIsEndBySuccess = false;
         this.timeStart = 0;
         this.timeEnd = 0;
+        this.timeDiff = '';
+        clearInterval(this.timerPtrMemorize);
+    }
+
+    private initTrainingSequence() {
+        this.resetParams();
+        this.lettersTrainingCount = Math.trunc(((letters.length / 100) * this.trainingLevel) * 10);
 
         let indexLetter;
         let letterExists;
@@ -141,6 +158,11 @@ export default class TopologicalMemory extends Vue {
 
         // generate letter task
         this.letterTask = this.lettersTrainingArray[Math.trunc(Math.random() * this.lettersTrainingArray.length)].name;
+
+        // complete memorization and start of search task card
+        this.timerPtrMemorize = setTimeout(() => {
+            this.turnBackCards();
+        }, this.timeMemorize * 1000);
     }
 
     private turnBackCards() {
@@ -151,6 +173,10 @@ export default class TopologicalMemory extends Vue {
                 elemFlipper.classList.add('flipper_turned');
             }
         }
+        clearInterval(this.timerPtrMemorize);
+        this.showLetterTask = true;
+        this.isTrainingFinished = false;
+        this.timeStart = Date.now();
     }
 
     private startBtnOnClick() {
@@ -158,15 +184,56 @@ export default class TopologicalMemory extends Vue {
     }
 
     private trainCardOnClick(e: any) {
+        if (this.isTrainingFinished) {
+            return;
+        }
+
         const clickedCardElem = e.target as HTMLDivElement;
         const clickedLetter = clickedCardElem.getAttribute('letter');
+
         if (clickedLetter !== null) {
             const card = document.getElementById('idTrainCard_' + clickedLetter) as HTMLDivElement;
             const elemFlipper = card.getElementsByClassName('flipper')[0];
+
             if (elemFlipper !== null) {
                 elemFlipper.classList.remove('flipper_turned');
             }
+
+            if (clickedLetter === this.letterTask) {
+                this.timeEnd = Date.now();
+                this.isTrainingFinished = true;
+                this.timeDiff = ((this.timeEnd - this.timeStart) / 1000).toFixed(2).toString() + ' сек';
+
+                const okLampElem = document.getElementById('idLampOk') as HTMLDivElement;
+                if (okLampElem) {
+                    okLampElem.style.opacity = '1.0';
+                    this.timerPtrLampOk = setTimeout(() => {
+                        okLampElem.style.opacity = '0.4';
+                        clearTimeout(this.timerPtrLampOk);
+                    }, 1000);
+                }
+            } else {
+                this.errorsCount++;
+                if (this.errorsCount >= this.errorsMax) {
+                    this.lettersTrainingArray = [];
+                    this.errorsCount = 0;
+                    this.letterTask = '';
+                    this.showLetterTask = false;
+                }
+                const errorLampElem = document.getElementById('idLampError') as HTMLDivElement;
+                if (errorLampElem) {
+                    errorLampElem.style.opacity = '1.0';
+                    this.timerPtrLampError = setTimeout(() => {
+                        errorLampElem.style.opacity = '0.4';
+                        clearTimeout(this.timerPtrLampError);
+                    }, 1000);
+                }
+            }
         }
+    }
+
+    private resetBtnOnClick() {
+        this.resetParams();
     }
 
 }
@@ -225,6 +292,7 @@ export default class TopologicalMemory extends Vue {
 .Training__ActionTask,
 .Training__Details{
     display: block;
+    text-align: center;
     width: 100%;
     height: 100px;
     border-bottom: 4px solid #F9F1E4;
@@ -271,6 +339,38 @@ table input {
     text-align: center;
 }
 
+/* Lamps */
+
+.cont_lamps {
+    display: block;
+}
+
+.lamp_error,
+.lamp_ok {
+    display: inline-block;
+    width: 64px;
+    height: 64px;
+    border: none;
+    border-radius: 50%;
+}
+
+.lamp_error {
+    background: radial-gradient(ellipse at center, #ff5542 0%,#cf0404 100%);
+    box-shadow: 0 0 16px #ff0000;
+    margin: 16px 16px 0 0;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+
+.lamp_ok {
+    background: radial-gradient(ellipse at center, #1ae45d 0%,#149b41 100%);
+    box-shadow: 0 0 16px #118337;
+    margin: 16px 0 0 16px;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+
+
 /* Flipped training card */
 
 .flip-container {
@@ -279,8 +379,8 @@ table input {
     margin: 32px 32px;
 }
 
-.flip-container, 
-.front, 
+.flip-container,
+.front,
 .back {
     width: 76px;
     height: 76px;
