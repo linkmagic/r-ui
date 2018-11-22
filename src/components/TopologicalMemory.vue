@@ -1,233 +1,3 @@
-<template>
-    <div class="Training__Memory__Topological">
-        <div class="Topological__Sidebar">
-
-            <div class="Training__IndicatorLamps">
-                <div class="cont_lamps">
-                    <div id="idLampError" class="lamp_error"></div>
-                    <div id="idLampOk" class="lamp_ok"></div>
-                </div>
-            </div>
-
-            <div class="Training__ActionResult">
-                <div class="Training__ActionResult__Value">
-                    {{ timeDiff }}
-                </div>
-
-            </div>
-
-            <div class="Training__ActionTask">
-                <div v-if="showLetterTask" class="Training__ActionTask__Value">
-                    {{ letterTask }}
-                </div>
-            </div>
-
-            <div class="Training__Details">
-                <table>
-                    <tr>
-                        <td>Уровень</td>
-                        <td>
-                            <input type="number" min=1 max=10 class="Training__Details__TrainingsCountInput" v-model="trainingLevel"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Макс. ошибок</td>
-                        <td><input type="number" min=1 max=5 class="Training__Details__TrainingsCountInput" v-model="errorsMax"/></td>
-                    </tr>
-                    <tr>
-                        <td>Время (сек)</td>
-                        <td><input type="number" min=1 max=60 class="Training__Details__TrainingsCountInput" v-model="timeMemorize"/></td>
-                    </tr>
-                </table>
-            </div>
-
-            <div class="Training__Details">
-                <a class="ctrlButton ctrlBtn_start" v-on:click="startBtnOnClick"></a>
-                <a class="ctrlButton ctrlBtn_stop" v-on:click="resetBtnOnClick"></a>
-            </div>
-
-        </div>
-
-        <div class="Topological__WorkingPlace">
-
-            <div v-for="letter in lettersTrainingArray" v-bind:key="letter.name"
-                 v-on:click="trainCardOnClick"
-                 class="flip-container"
-                 v-bind:id="'idTrainCard_' + letter.name"
-                 >
-
-                <div class="flipper">
-                    <div class="front">
-                        {{letter.name}}
-                    </div>
-                    <div class="back" :letter="letter.name">
-                        {{'%'}}
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-    </div>
-</template>
-
-<script>
-
-export default {
-    name: 'TopologicalMemory',
-
-    props: {
-        someProp: String
-    },
-
-    data: function() {
-        return {
-            letters: [
-                'А', 'Б', 'В', 'Г', 'Ґ', 'Д', 'Е', 'Є', 'Ж', 'З', 'И', 'І', 'Ї', 'Й',
-                'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф', 'Х', 'Ц', 'Ч',
-                'Ш', 'Щ', 'Ь', 'Ю', 'Я'
-            ],
-            trainingLevel: 1,
-            lettersTrainingArray: [],
-            lettersTrainingCount: 0,
-            letterTask: '',
-            showLetterTask: false,
-            timeMemorize: 2,
-            errorsMax: 2,
-            errorsCount: 0,
-            timeStart: 0,
-            timeEnd: 0,
-            timeDiff: '',
-            isTrainingFinished: true,
-            timerPtrMemorize: null,
-            timerPtrLampOk: null,
-            timerPtrLampError: null
-        }
-    },
-
-    methods: {
-        resetParams: function() {
-            this.lettersTrainingArray = [];
-            this.letterTask = '';
-            this.showLetterTask = false;
-            this.errorsCount = 0;
-            this.timeStart = 0;
-            this.timeEnd = 0;
-            this.timeDiff = '';
-            clearInterval(this.timerPtrMemorize);
-        },
-
-        initTrainingSequence: function() {
-            this.resetParams();
-            this.lettersTrainingCount = Math.trunc(((this.letters.length / 100) * this.trainingLevel) * 10);
-
-            let indexLetter;
-            let letterExists;
-
-            // filling an array of training
-            let i = 0;
-            while (i < this.lettersTrainingCount) {
-                indexLetter = Math.floor(Math.random() * this.letters.length);
-                letterExists = false;
-                for (const ch of this.lettersTrainingArray) {
-                    if (ch.name === this.letters[indexLetter]) {
-                        letterExists = true;
-                        break;
-                    }
-                }
-                if (!letterExists) {
-                    this.lettersTrainingArray.push({
-                        name: this.letters[indexLetter],
-                        showFace: false,
-                    });
-                    i++;
-                }
-            }
-
-            // generate letter task
-            this.letterTask = this.lettersTrainingArray[Math.trunc(Math.random() * this.lettersTrainingArray.length)].name;
-
-            // complete memorization and start of search task card
-            this.timerPtrMemorize = setTimeout(() => {
-                this.turnBackCards();
-            }, this.timeMemorize * 1000);
-        },
-
-        turnBackCards: function() {
-            for (const letter of this.lettersTrainingArray) {
-                const elemCard = document.getElementById('idTrainCard_' + letter.name);
-                const elemFlipper = elemCard.getElementsByClassName('flipper')[0];
-                if (elemFlipper !== null) {
-                    elemFlipper.classList.add('flipper_turned');
-                }
-            }
-            clearInterval(this.timerPtrMemorize);
-            this.showLetterTask = true;
-            this.isTrainingFinished = false;
-            this.timeStart = Date.now();
-        },
-
-        startBtnOnClick: function() {
-            this.initTrainingSequence();
-        },
-
-        trainCardOnClick: function(e) {
-            if (this.isTrainingFinished) {
-                return;
-            }
-
-            const clickedCardElem = e.target;
-            const clickedLetter = clickedCardElem.getAttribute('letter');
-
-            if (clickedLetter !== null) {
-                const card = document.getElementById('idTrainCard_' + clickedLetter);
-                const elemFlipper = card.getElementsByClassName('flipper')[0];
-
-                if (elemFlipper !== null) {
-                    elemFlipper.classList.remove('flipper_turned');
-                }
-
-                if (clickedLetter === this.letterTask) {
-                    this.timeEnd = Date.now();
-                    this.isTrainingFinished = true;
-                    this.timeDiff = ((this.timeEnd - this.timeStart) / 1000).toFixed(2).toString() + ' сек';
-
-                    const okLampElem = document.getElementById('idLampOk');
-                    if (okLampElem) {
-                        okLampElem.style.opacity = '1.0';
-                        this.timerPtrLampOk = setTimeout(() => {
-                            okLampElem.style.opacity = '0.2';
-                            clearTimeout(this.timerPtrLampOk);
-                        }, 1000);
-                    }
-                } else {
-                    this.errorsCount++;
-                    if (this.errorsCount >= this.errorsMax) {
-                        this.lettersTrainingArray = [];
-                        this.errorsCount = 0;
-                        this.letterTask = '';
-                        this.showLetterTask = false;
-                    }
-                    const errorLampElem = document.getElementById('idLampError');
-                    if (errorLampElem) {
-                        errorLampElem.style.opacity = '1.0';
-                        this.timerPtrLampError = setTimeout(() => {
-                            errorLampElem.style.opacity = '0.2';
-                            clearTimeout(this.timerPtrLampError);
-                        }, 1000);
-                    }
-                }
-            }
-        },
-
-        resetBtnOnClick: function () {
-            this.resetParams();
-        }
-
-    }
-}
-</script>
-
 <style scoped>
 
 .Training__Memory__Topological {
@@ -277,8 +47,7 @@ export default {
 
 .Training__IndicatorLamps,
 .Training__ActionResult,
-.Training__ActionTask,
-.Training__Details {
+.Training__ActionTask {
     display: block;
     text-align: center;
     width: 100%;
@@ -294,8 +63,19 @@ export default {
     padding: 12% 0 0 0;
 }
 
-.Training__ActionTask,
 .Training__Details {
+    display: block;
+    text-align: center;
+    width: 100%;
+    margin: 0 0 8px 0;
+    padding: 12px 0 0 0;
+    background-color: #f9f1e4;
+    border: 2px solid rgba(0,0,0,0.15);
+    border-radius: 8px;
+    box-shadow: 0px 0px 16px rgba(0,0,0,0.25);
+}
+
+.Training__ActionTask {
     padding: 18px 0;
 }
 
@@ -484,3 +264,262 @@ table input {
 }
 
 </style>
+
+<template>
+    <div class="Training__Memory__Topological">
+        <div class="Topological__Sidebar">
+
+            <div class="Training__IndicatorLamps">
+                <div class="cont_lamps">
+                    <div id="idLampError" class="lamp_error"></div>
+                    <div id="idLampOk" class="lamp_ok"></div>
+                </div>
+            </div>
+
+            <div class="Training__ActionResult">
+                <div class="Training__ActionResult__Value">
+                    {{ timeDiff }}
+                </div>
+
+            </div>
+
+            <div class="Training__ActionTask">
+                <div v-if="showLetterTask" class="Training__ActionTask__Value">
+                    {{ letterTask }}
+                </div>
+            </div>
+
+            <div class="Training__Details">
+                <table>
+                    <tr>
+                        <td>Уровень</td>
+                        <td>
+                            <input type="number" min=1 max=10 class="Training__Details__TrainingsCountInput" v-model="trainingLevel"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Макс. ошибок</td>
+                        <td><input type="number" min=1 max=5 class="Training__Details__TrainingsCountInput" v-model="errorsMax"/></td>
+                    </tr>
+                    <tr>
+                        <td>Время (сек)</td>
+                        <td><input type="number" min=1 max=60 class="Training__Details__TrainingsCountInput" v-model="timeMemorize"/></td>
+                    </tr>
+                    <tr>
+                        <td>Итераций</td>
+                        <td><input type="number" min=1 max=30 class="Training__Details__TrainingsCountInput" v-model="iterationsMemorize"/></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="Training__Details">
+                <a class="ctrlButton ctrlBtn_start" v-on:click="startBtnOnClick"></a>
+                <a class="ctrlButton ctrlBtn_stop" v-on:click="resetBtnOnClick"></a>
+            </div>
+
+        </div>
+
+        <div class="Topological__WorkingPlace">
+
+            <div v-for="letter in lettersTrainingArray" v-bind:key="letter.name"
+                 v-on:click="trainCardOnClick"
+                 class="flip-container"
+                 v-bind:id="'idTrainCard_' + letter.name"
+                 >
+
+                <div class="flipper">
+                    <div class="front">
+                        {{letter.name}}
+                    </div>
+                    <div class="back" :letter="letter.name">
+                        {{'%'}}
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</template>
+
+<script>
+
+export default {
+    name: 'TopologicalMemory',
+
+    props: {
+        someProp: String
+    },
+
+    data: function() {
+        return {
+            letters: [
+                'А', 'Б', 'В', 'Г', 'Ґ', 'Д', 'Е', 'Є', 'Ж', 'З', 'И', 'І', 'Ї', 'Й',
+                'К', 'Л', 'М', 'Н', 'О', 'П', 'Р', 'С', 'Т', 'У', 'Ф', 'Х', 'Ц', 'Ч',
+                'Ш', 'Щ', 'Ь', 'Ю', 'Я'
+            ],
+            trainingLevel: 1,
+            lettersTrainingArray: [],
+            lettersTrainingCount: 0,
+            letterTask: '',
+            showLetterTask: false,
+            timeMemorize: 2,
+            iterationsMemorize: 3,
+            iterationsMemorizePass: 0,
+            errorsMax: 2,
+            errorsCount: 0,
+            timeStart: 0,
+            timeEnd: 0,
+            timeDiff: '',
+            isTrainingFinished: true,
+            timerPtrMemorize: null,
+            timerPtrLampOk: null,
+            timerPtrLampError: null,
+            timerPtrIterations: null
+        }
+    },
+
+    methods: {
+        resetParams: function() {
+            this.lettersTrainingArray = [];
+            this.letterTask = '';
+            this.showLetterTask = false;
+            this.errorsCount = 0;
+            this.timeStart = 0;
+            this.timeEnd = 0;
+            this.timeDiff = '';
+            clearInterval(this.timerPtrMemorize);
+        },
+
+        initTrainingSequence: function() {
+            this.resetParams();
+            this.lettersTrainingCount = Math.trunc(((this.letters.length / 100) * this.trainingLevel) * 10);
+
+            let indexLetter;
+            let letterExists;
+
+            // filling an array of training
+            let i = 0;
+            while (i < this.lettersTrainingCount) {
+                indexLetter = Math.floor(Math.random() * this.letters.length);
+                letterExists = false;
+                for (const ch of this.lettersTrainingArray) {
+                    if (ch.name === this.letters[indexLetter]) {
+                        letterExists = true;
+                        break;
+                    }
+                }
+                if (!letterExists) {
+                    this.lettersTrainingArray.push({
+                        name: this.letters[indexLetter],
+                        showFace: false,
+                    });
+                    i++;
+                }
+            }
+
+            // generate letter task
+            this.letterTask = this.lettersTrainingArray[Math.trunc(Math.random() * this.lettersTrainingArray.length)].name;
+
+            // complete memorization and start of search task card
+            this.timerPtrMemorize = setTimeout(() => {
+                this.turnBackCards();
+            }, this.timeMemorize * 1000);
+        },
+
+        turnBackCards: function() {
+            for (const letter of this.lettersTrainingArray) {
+                const elemCard = document.getElementById('idTrainCard_' + letter.name);
+                const elemFlipper = elemCard.getElementsByClassName('flipper')[0];
+                if (elemFlipper !== null) {
+                    elemFlipper.classList.add('flipper_turned');
+                }
+            }
+            clearInterval(this.timerPtrMemorize);
+            this.showLetterTask = true;
+            this.isTrainingFinished = false;
+            this.timeStart = Date.now();
+        },
+
+        startBtnOnClick: function() {
+            this.initTrainingSequence();
+        },
+
+        trainCardOnClick: function(e) {
+            if (this.isTrainingFinished) {
+                return;
+            }
+
+            const clickedCardElem = e.target;
+            const clickedLetter = clickedCardElem.getAttribute('letter');
+
+            if (clickedLetter !== null) {
+                const card = document.getElementById('idTrainCard_' + clickedLetter);
+                const elemFlipper = card.getElementsByClassName('flipper')[0];
+
+                if (elemFlipper !== null) {
+                    elemFlipper.classList.remove('flipper_turned');
+                }
+
+                if (clickedLetter === this.letterTask) {
+                    this.timeEnd = Date.now();
+                    this.isTrainingFinished = true;
+                    this.timeDiff = ((this.timeEnd - this.timeStart) / 1000).toFixed(2).toString() + ' сек';
+
+                    const okLampElem = document.getElementById('idLampOk');
+                    if (okLampElem) {
+                        okLampElem.style.opacity = '1.0';
+
+                        this.timerPtrLampOk = setTimeout(() => {
+                            okLampElem.style.opacity = '0.2';
+
+                            this.timerPtrIterations = setTimeout(() => {
+                                this.iterationsMemorizePass++;
+                                if (this.iterationsMemorizePass < parseInt(this.iterationsMemorize)) {
+                                    for (const letter of this.lettersTrainingArray) {
+                                        const elemCard = document.getElementById('idTrainCard_' + letter.name);
+                                        const elemFlipper = elemCard.getElementsByClassName('flipper')[0];
+                                        if (elemFlipper !== null) {
+                                            elemFlipper.classList.remove('flipper_turned');
+                                        }
+                                    }
+                                    this.resetParams();
+                                    this.initTrainingSequence();
+                                } else {
+                                    this.resetParams();
+                                    this.iterationsMemorizePass = 0;
+                                }
+                                clearTimeout(this.timerPtrIterations);
+                            }, 500);
+
+                            clearTimeout(this.timerPtrLampOk);
+                        }, 1000);
+
+                    }
+                } else {
+                    this.errorsCount++;
+                    if (this.errorsCount >= this.errorsMax) {
+                        this.lettersTrainingArray = [];
+                        this.errorsCount = 0;
+                        this.letterTask = '';
+                        this.showLetterTask = false;
+                    }
+                    const errorLampElem = document.getElementById('idLampError');
+                    if (errorLampElem) {
+                        errorLampElem.style.opacity = '1.0';
+                        this.timerPtrLampError = setTimeout(() => {
+                            errorLampElem.style.opacity = '0.2';
+                            clearTimeout(this.timerPtrLampError);
+                        }, 1000);
+                    }
+                }
+            }
+        },
+
+        resetBtnOnClick: function () {
+            this.resetParams();
+        }
+
+    }
+}
+</script>

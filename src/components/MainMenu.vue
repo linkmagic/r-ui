@@ -1,3 +1,50 @@
+<style scoped>
+
+.MainMenu {
+    display: flex;
+    font-size: 1.3em;
+}
+
+.MainMenu__Column {
+    margin: 8px;
+}
+
+.MainMenu__Section__Title {
+    display: block;
+    font-size: 2em;
+    font-weight: bold;
+    text-align: center;
+}
+
+.MainMenu__Section__Trainings {
+    display: block;
+}
+
+.MainMenu__Section__Trainings > button {
+    display: block;
+}
+
+.TrainingBtn {
+    border: none;
+    background-color: #0a5c87;
+    color: #fff;
+    min-width: 216px;
+    padding: 8px;
+    margin: 8px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.75);
+    transition: 0.1s;
+}
+.TrainingBtn:active {
+    background-color: #0D76AD;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.75);
+}
+.TrainingBtn:focus {
+    outline: none;
+}
+
+</style>
+
 <template>
     <div class="MainMenu">
 
@@ -117,50 +164,3 @@ export default {
 
 }
 </script>
-
-<style scoped>
-
-.MainMenu {
-    display: flex;
-    font-size: 1.3em;
-}
-
-.MainMenu__Column {
-    margin: 8px;
-}
-
-.MainMenu__Section__Title {
-    display: block;
-    font-size: 2em;
-    font-weight: bold;
-    text-align: center;
-}
-
-.MainMenu__Section__Trainings {
-    display: block;
-}
-
-.MainMenu__Section__Trainings > button {
-    display: block;
-}
-
-.TrainingBtn {
-    border: none;
-    background-color: #0a5c87;
-    color: #fff;
-    min-width: 216px;
-    padding: 8px;
-    margin: 8px;
-    border-radius: 4px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.75);
-    transition: 0.1s;
-}
-.TrainingBtn:active {
-    background-color: #0D76AD;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.75);
-}
-.TrainingBtn:focus {
-    outline: none;
-}
-
-</style>
