@@ -375,7 +375,8 @@ export default {
             timerPtrMemorize: null,
             timerPtrLampOk: null,
             timerPtrLampError: null,
-            timerPtrIterations: null
+            timerPtrIterations: null,
+            analyticsTraining: []
         }
     },
 
@@ -465,17 +466,45 @@ export default {
                     this.timeEnd = Date.now();
                     this.isTrainingFinished = true;
                     this.timeDiff = ((this.timeEnd - this.timeStart) / 1000).toFixed(2).toString() + ' сек';
+                    this.iterationsMemorizePass += 1;
 
                     const okLampElem = document.getElementById('idLampOk');
                     if (okLampElem) {
                         okLampElem.style.opacity = '1.0';
-
                         this.timerPtrLampOk = setTimeout(() => {
                             okLampElem.style.opacity = '0.2';
+                            clearTimeout(this.timerPtrLampOk);
+                        }, 1000);
+                    }
+                    this.timerPtrIterations = setTimeout(() => {
+                        if (this.iterationsMemorizePass < +this.iterationsMemorize) {
+                            for (const letter of this.lettersTrainingArray) {
+                                const elemCard = document.getElementById('idTrainCard_' + letter.name);
+                                const elemFlipper = elemCard.getElementsByClassName('flipper')[0];
+                                if (elemFlipper !== null) {
+                                    elemFlipper.classList.remove('flipper_turned');
+                                }
+                            }
+                            this.resetParams();
+                            this.initTrainingSequence();
+                        } else {
+                            this.resetParams();
+                            this.iterationsMemorizePass = 0;
+                        }
+                        clearTimeout(this.timerPtrIterations);
+                    }, 1500);
+                } else {
+                    this.errorsCount += 1;
+                    this.iterationsMemorizePass += 1;
 
-                            this.timerPtrIterations = setTimeout(() => {
-                                this.iterationsMemorizePass++;
-                                if (this.iterationsMemorizePass < parseInt(this.iterationsMemorize)) {
+                    const errorLampElem = document.getElementById('idLampError');
+                    if (errorLampElem) {
+                        errorLampElem.style.opacity = '1.0';
+
+                        this.timerPtrLampError = setTimeout(() => {
+                            errorLampElem.style.opacity = '0.2';
+                            if (this.errorsCount > +this.errorsMax - 1) {
+                                if (this.iterationsMemorizePass < +this.iterationsMemorize) {
                                     for (const letter of this.lettersTrainingArray) {
                                         const elemCard = document.getElementById('idTrainCard_' + letter.name);
                                         const elemFlipper = elemCard.getElementsByClassName('flipper')[0];
@@ -489,29 +518,11 @@ export default {
                                     this.resetParams();
                                     this.iterationsMemorizePass = 0;
                                 }
-                                clearTimeout(this.timerPtrIterations);
-                            }, 500);
-
-                            clearTimeout(this.timerPtrLampOk);
-                        }, 1000);
-
-                    }
-                } else {
-                    this.errorsCount++;
-                    if (this.errorsCount >= this.errorsMax) {
-                        this.lettersTrainingArray = [];
-                        this.errorsCount = 0;
-                        this.letterTask = '';
-                        this.showLetterTask = false;
-                    }
-                    const errorLampElem = document.getElementById('idLampError');
-                    if (errorLampElem) {
-                        errorLampElem.style.opacity = '1.0';
-                        this.timerPtrLampError = setTimeout(() => {
-                            errorLampElem.style.opacity = '0.2';
+                            }
                             clearTimeout(this.timerPtrLampError);
-                        }, 1000);
+                        }, 2000);
                     }
+
                 }
             }
         },
