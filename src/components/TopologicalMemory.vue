@@ -380,6 +380,10 @@ export default {
         }
     },
 
+    beforeCreate() {
+
+    },
+
     methods: {
         resetParams: function() {
             this.lettersTrainingArray = [];
@@ -529,8 +533,12 @@ export default {
 
         resetBtnOnClick: function () {
             this.resetParams();
+        },
+
+        addAnalyticPoint() {
+            // analyticsTraining
         }
 
-    }
+    } // methods
 }
 </script>
