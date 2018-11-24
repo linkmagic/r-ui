@@ -267,6 +267,9 @@ table input {
 
 <template>
     <div class="Training__Memory__Topological">
+
+        <TrainingResultLineChart :labels="analyticsLabels" :chartColor="analyticsChartColor" :resultDataChart="analyticsResultDataChart" />
+
         <div class="Topological__Sidebar">
 
             <div class="Training__IndicatorLamps">
@@ -344,8 +347,14 @@ table input {
 
 <script>
 
+import TrainingResultLineChart from '@/components/TrainingResultLineChart'
+
 export default {
     name: 'TopologicalMemory',
+
+    components: {
+        TrainingResultLineChart
+    },
 
     props: {
         someProp: String
@@ -376,7 +385,10 @@ export default {
             timerPtrLampOk: null,
             timerPtrLampError: null,
             timerPtrIterations: null,
-            analyticsTraining: []
+
+            analyticsLabels: [ 'Time (s)', 'Total Errors' ],
+			analyticsChartColor: [ '#00bb00', '#ff0000' ],
+			analyticsResultDataChart: [[],[]]
         }
     },
 
@@ -393,6 +405,8 @@ export default {
             this.timeStart = 0;
             this.timeEnd = 0;
             this.timeDiff = '';
+            // this.analyticsLabels = [];
+            // this.analyticsResultDataChart = [[],[]];
             clearInterval(this.timerPtrMemorize);
         },
 
@@ -471,6 +485,7 @@ export default {
                     this.isTrainingFinished = true;
                     this.timeDiff = ((this.timeEnd - this.timeStart) / 1000).toFixed(2).toString() + ' сек';
                     this.iterationsMemorizePass += 1;
+                    this.addAnalyticPoint(this.timeDiff, this.errorsCount);
 
                     const okLampElem = document.getElementById('idLampOk');
                     if (okLampElem) {
@@ -494,6 +509,7 @@ export default {
                         } else {
                             this.resetParams();
                             this.iterationsMemorizePass = 0;
+                            this.setVisibleAnalyticWindow(true);
                         }
                         clearTimeout(this.timerPtrIterations);
                     }, 1500);
@@ -516,11 +532,15 @@ export default {
                                             elemFlipper.classList.remove('flipper_turned');
                                         }
                                     }
+                                    this.timeEnd = Date.now();
+                                    this.timeDiff = ((this.timeEnd - this.timeStart) / 1000).toFixed(2).toString() + ' сек';
+                                    this.addAnalyticPoint(this.timeDiff, this.errorsCount);
                                     this.resetParams();
                                     this.initTrainingSequence();
                                 } else {
                                     this.resetParams();
                                     this.iterationsMemorizePass = 0;
+                                    this.setVisibleAnalyticWindow(true);
                                 }
                             }
                             clearTimeout(this.timerPtrLampError);
@@ -535,8 +555,14 @@ export default {
             this.resetParams();
         },
 
-        addAnalyticPoint() {
-            // analyticsTraining
+        addAnalyticPoint(valueTime, valueErrors) {
+            this.analyticsLabels.push(String(this.analyticsLabels.length + 1));
+            this.analyticsResultDataChart[0].push(valueTime);
+            this.analyticsResultDataChart[1].push(valueErrors);
+        },
+
+        setVisibleAnalyticWindow: function(value) {
+            this.$store.commit('setVisibleTrainingResultChart', value);
         }
 
     } // methods
