@@ -281,7 +281,7 @@ table input {
 
             <div class="Training__ActionResult">
                 <div class="Training__ActionResult__Value">
-                    {{ timeDiff }}
+                    <span>{{ iterationsMemorizePass }}&nbsp;</span> {{ timeDiff }}
                 </div>
 
             </div>
@@ -405,8 +405,6 @@ export default {
             this.timeStart = 0;
             this.timeEnd = 0;
             this.timeDiff = '';
-            // this.analyticsLabels = [];
-            // this.analyticsResultDataChart = [[],[]];
             clearInterval(this.timerPtrMemorize);
         },
 
@@ -481,10 +479,10 @@ export default {
                 }
 
                 if (clickedLetter === this.letterTask) {
-                    this.timeEnd = Date.now();
-                    this.isTrainingFinished = true;
-                    this.timeDiff = ((this.timeEnd - this.timeStart) / 1000).toFixed(2).toString() + ' сек';
                     this.iterationsMemorizePass += 1;
+                    this.isTrainingFinished = true;
+                    this.timeEnd = Date.now();
+                    this.timeDiff = ((this.timeEnd - this.timeStart) / 1000).toFixed(1).toString();
                     this.addAnalyticPoint(this.timeDiff, this.errorsCount);
 
                     const okLampElem = document.getElementById('idLampOk');
@@ -493,8 +491,9 @@ export default {
                         this.timerPtrLampOk = setTimeout(() => {
                             okLampElem.style.opacity = '0.2';
                             clearTimeout(this.timerPtrLampOk);
-                        }, 1000);
+                        }, 2000);
                     }
+
                     this.timerPtrIterations = setTimeout(() => {
                         if (this.iterationsMemorizePass < +this.iterationsMemorize) {
                             for (const letter of this.lettersTrainingArray) {
@@ -507,44 +506,57 @@ export default {
                             this.resetParams();
                             this.initTrainingSequence();
                         } else {
-                            this.resetParams();
                             this.iterationsMemorizePass = 0;
-                            this.setVisibleAnalyticWindow(true);
+                            this.resetParams();
+                            // this.setVisibleAnalyticWindow(true);
                         }
                         clearTimeout(this.timerPtrIterations);
-                    }, 1500);
+                    }, 2000);
+
+
                 } else {
-                    this.errorsCount += 1;
-                    this.iterationsMemorizePass += 1;
 
-                    const errorLampElem = document.getElementById('idLampError');
-                    if (errorLampElem) {
-                        errorLampElem.style.opacity = '1.0';
+                    if (this.errorsCount < +this.errorsMax) {
+                        this.errorsCount += 1;
 
-                        this.timerPtrLampError = setTimeout(() => {
-                            errorLampElem.style.opacity = '0.2';
-                            if (this.errorsCount > +this.errorsMax - 1) {
-                                if (this.iterationsMemorizePass < +this.iterationsMemorize) {
-                                    for (const letter of this.lettersTrainingArray) {
-                                        const elemCard = document.getElementById('idTrainCard_' + letter.name);
-                                        const elemFlipper = elemCard.getElementsByClassName('flipper')[0];
-                                        if (elemFlipper !== null) {
-                                            elemFlipper.classList.remove('flipper_turned');
-                                        }
-                                    }
-                                    this.timeEnd = Date.now();
-                                    this.timeDiff = ((this.timeEnd - this.timeStart) / 1000).toFixed(2).toString() + ' сек';
-                                    this.addAnalyticPoint(this.timeDiff, this.errorsCount);
-                                    this.resetParams();
-                                    this.initTrainingSequence();
-                                } else {
-                                    this.resetParams();
-                                    this.iterationsMemorizePass = 0;
-                                    this.setVisibleAnalyticWindow(true);
+                        const errorLampElem = document.getElementById('idLampError');
+                        if (errorLampElem) {
+                            errorLampElem.style.opacity = '1.0';
+                            this.timerPtrLampError = setTimeout(() => {
+                                errorLampElem.style.opacity = '0.2';
+                                clearTimeout(this.timerPtrLampError);
+                            }, 2000);
+                        }
+
+                    } else {
+                        this.isTrainingFinished = true;
+                        this.timeEnd = Date.now();
+                        this.timeDiff = ((this.timeEnd - this.timeStart) / 1000).toFixed(1).toString();
+                        this.addAnalyticPoint(this.timeDiff, this.errorsCount);
+                        this.iterationsMemorizePass += 1;
+                    }
+
+                    if (this.iterationsMemorizePass < +this.iterationsMemorize && this.errorsCount >= +this.errorsMax) {
+                        this.iterationsMemorizePass += 1;
+                        this.timerPtrIterations = setTimeout(() => {
+                            for (const letter of this.lettersTrainingArray) {
+                                const elemCard = document.getElementById('idTrainCard_' + letter.name);
+                                const elemFlipper = elemCard.getElementsByClassName('flipper')[0];
+                                if (elemFlipper !== null) {
+                                    elemFlipper.classList.remove('flipper_turned');
                                 }
                             }
-                            clearTimeout(this.timerPtrLampError);
+                            this.resetParams();
+                            this.initTrainingSequence();
+                            clearTimeout(this.timerPtrIterations);
                         }, 2000);
+
+                    }
+
+                    if (this.iterationsMemorizePass >= +this.iterationsMemorize && this.errorsCount >= +this.errorsMax) {
+                        this.iterationsMemorizePass = 0;
+                        this.resetParams();
+                        // this.setVisibleAnalyticWindow(true);
                     }
 
                 }
@@ -556,9 +568,10 @@ export default {
         },
 
         addAnalyticPoint(valueTime, valueErrors) {
-            this.analyticsLabels.push(String(this.analyticsLabels.length + 1));
-            this.analyticsResultDataChart[0].push(valueTime);
-            this.analyticsResultDataChart[1].push(valueErrors);
+            // this.analyticsLabels.push(String(this.analyticsLabels.length + 1));
+            // this.analyticsResultDataChart[0].push(valueTime);
+            // this.analyticsResultDataChart[1].push(valueErrors);
+            console.log('time:', valueTime, 'errors:', valueErrors);
         },
 
         setVisibleAnalyticWindow: function(value) {
